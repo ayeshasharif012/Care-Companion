@@ -1,0 +1,64 @@
+# ==========================================
+# 🛡️ SECRETS & ENVIRONMENT FILES
+# ==========================================
+.env
+.env.*
+backend/.env
+frontend/.env
+ai-voice-service/.env
+iot-controller/config.py
+**/config.py
+
+# ==========================================
+# 📦 DEPENDENCIES (Keep your repo light!)
+# ==========================================
+node_modules/
+**/node_modules/
+__pycache__/
+**/__pycache__/
+
+# Python Environments
+venv/
+env/
+backend/env/
+frontend/env/
+.venv/
+
+# Mobile/Expo dependencies
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# ==========================================
+# 🔊 AUDIO & MEDIA (Generated Files)
+# ==========================================
+**/audio/*.mp3
+**/audio/*.wav
+**/voice_cache/
+temp_voice.mp3
+output.mp3
+input.wav
+
+# ==========================================
+# 🛠️ IDE & SYSTEM FILES
+# ==========================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# ==========================================
+# 🚀 BUILD & LOGS
+# ==========================================
+dist/
+build/
+out/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

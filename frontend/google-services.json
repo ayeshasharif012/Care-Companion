@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1067219573666",
+    "project_id": "carecompanion-34628",
+    "storage_bucket": "carecompanion-34628.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067219573666:android:679b51f8bc90cb4c35b0fb",
+        "android_client_info": {
+          "package_name": "com.izhan.carecompanion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYxwVHziu-5UZ5UKKTnSBJ3VIPIIRAOQw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
