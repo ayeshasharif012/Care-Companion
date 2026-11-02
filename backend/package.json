@@ -1,0 +1,38 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Care Companion Backend",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed:demo": "node scripts/seedFypDemo.js"
+  },
+  "keywords": [],
+  "author": "Izhan Rehan",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "expo-server-sdk": "^6.1.0",
+    "express": "^4.22.1",
+    "express-fileupload": "^1.5.2",
+    "express-validator": "^7.3.2",
+    "firebase-admin": "^13.7.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.23.0",
+    "mqtt": "^5.3.5",
+    "multer": "^2.1.1",
+    "nodemailer": "^7.0.13",
+    "openai": "^6.38.0",
+    "socket.io": "^4.8.3",
+    "twilio": "^5.12.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

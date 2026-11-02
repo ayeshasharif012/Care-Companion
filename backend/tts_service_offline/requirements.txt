@@ -1,0 +1,9 @@
+transformers
+torch
+scipy
+piper-tts
+soundfile
+pyttsx3
+pywin32
+comtypes
+gtts
