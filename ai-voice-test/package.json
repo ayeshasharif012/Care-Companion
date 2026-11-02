@@ -1,0 +1,29 @@
+{
+  "name": "ai-voice-motivation",
+  "version": "1.0.0",
+  "description": "Simple Node.js Express backend for AI voice motivation system using OpenAI API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "express",
+    "openai",
+    "speech-to-text",
+    "text-to-speech",
+    "motivation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "openai": "^4.28.0",
+    "multer": "^1.4.5-lts.1",
+    "axios": "^1.6.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

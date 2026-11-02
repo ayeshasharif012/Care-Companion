@@ -1,0 +1,12 @@
+# IoT main.py (Flask :5002) — no torch (avoids Windows MAX_PATH in deep OneDrive folders)
+flask
+flask-cors
+pymongo
+certifi
+python-dateutil
+pygame
+openai
+gTTS
+sounddevice
+numpy
+requests

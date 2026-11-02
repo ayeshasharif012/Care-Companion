@@ -1,0 +1,182 @@
+# Paste this ENTIRE block on the Pi (one SSH session) — no Windows scp needed.
+# Fixes: false STT "You" / "Thanks for watching", disables wake-word spam.
+
+python3 << 'ENDFIX'
+from pathlib import Path
+import re, os
+
+H = Path("/home/carecompanion")
+os.chdir(H)
+
+# --- .env quiet mode ---
+env = H / ".env"
+env.touch()
+keys = {
+    "ENABLE_WAKE_WORD": "0",
+    "ENABLE_PI_EMOTION": "0",
+    "ENABLE_SOS": "0",
+    "USE_VAD": "1",
+    "VAD_ENERGY_THRESHOLD": "700",
+    "VAD_MIN_SPEECH_S": "0.9",
+    "STT_MIN_WORDS": "2",
+    "STT_REJECT_SINGLE": "1",
+}
+lines, seen = env.read_text(errors="ignore").splitlines(), set()
+out = []
+for line in lines:
+    if "=" in line and not line.strip().startswith("#"):
+        k = line.split("=", 1)[0].strip()
+        if k in keys:
+            out.append(f"{k}={keys[k]}")
+            seen.add(k)
+            continue
+    out.append(line)
+for k, v in keys.items():
+    if k not in seen:
+        out.append(f"{k}={v}")
+env.write_text("\n".join(out) + "\n")
+print("OK .env")
+
+# --- vad.py ---
+(H / "voice" / "stt").mkdir(parents=True, exist_ok=True)
+(H / "voice" / "stt" / "vad.py").write_text(
+    '''import os
+STT_MIN_WORDS = int(os.getenv("STT_MIN_WORDS", "2"))
+STT_REJECT_SINGLE = os.getenv("STT_REJECT_SINGLE", "1").lower() in ("1", "true", "yes")
+_BAD = {
+    "you", "You", "you.", "You.",
+    "thanks for watching!", "Thanks for watching!",
+    "thank you for watching!", "Thank you for watching!",
+    "thank you.", "Thank you.", "thank you", "Thank you", "",
+}
+
+def is_hallucination(text):
+    s = (text or "").strip()
+    if s in _BAD or s.lower() in {x.lower() for x in _BAD}:
+        return True
+    if STT_REJECT_SINGLE:
+        words = [w for w in s.split() if w.strip(".,!?;:")]
+        if len(words) < STT_MIN_WORDS:
+            return True
+    return False
+
+def record_until_silence(max_seconds=8.0, sample_rate=16000):
+    import tempfile, wave, sounddevice as sd
+    print(f"VAD (max {max_seconds}s) - speak 2+ words")
+    frames = int(max_seconds * sample_rate)
+    audio = sd.rec(frames, samplerate=sample_rate, channels=1, dtype="int16")
+    sd.wait()
+    fd, path = tempfile.mkstemp(suffix=".wav")
+    os.close(fd)
+    with wave.open(path, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio.tobytes())
+    return path, len(audio) / sample_rate
+''',
+    encoding="utf-8",
+    newline="\n",
+)
+print("OK vad.py")
+
+# --- stt_engine.py ---
+p = H / "voice" / "stt" / "stt_engine.py"
+if not p.exists():
+    print("MISSING voice/stt/stt_engine.py - copy voice/ folder when scp works")
+else:
+    t = p.read_text(encoding="utf-8", errors="ignore")
+    if "_is_real_speech" not in t:
+        t = t.replace(
+            "def listen(",
+            '''def _is_real_speech(text):
+    try:
+        from voice.stt.vad import is_hallucination
+        return not is_hallucination(text)
+    except ImportError:
+        return len((text or "").split()) >= 2
+
+def listen(''',
+            1,
+        )
+    if "STT rejected" not in t:
+        t = re.sub(
+            r"text = _transcribe\(audio_path, language\)\n    if not text:",
+            "text = _transcribe(audio_path, language)\n"
+            "    if not text or not _is_real_speech(text):\n"
+            "        if text:\n"
+            '            print(f"STT rejected: \'{text.strip()}\'")',
+            t,
+            count=1,
+        )
+    p.write_text(t, encoding="utf-8", newline="\n")
+    print("OK stt_engine.py")
+
+# --- main.py ENABLE flags ---
+m = H / "main.py"
+if m.exists():
+    t = m.read_text(encoding="utf-8", errors="ignore")
+    changed = False
+    if "_load_dotenv" not in t and "from database import collection" in t:
+        t = t.replace(
+            "from database import collection",
+            '''def _load_dotenv():
+    from pathlib import Path
+    for env_path in (Path(__file__).resolve().parent / ".env", Path("/home/carecompanion/.env")):
+        if not env_path.exists():
+            continue
+        for line in env_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, _, v = line.partition("=")
+                k, v = k.strip(), v.strip().strip('"').strip("'")
+                if k and k not in os.environ:
+                    os.environ[k] = v
+        break
+
+_load_dotenv()
+
+from database import collection''',
+            1,
+        )
+        changed = True
+    if "ENABLE_WAKE_WORD" not in t:
+        t = t.replace(
+            'EMOTION_SERVICE_URL = os.getenv("EMOTION_SERVICE_URL"',
+            'ENABLE_WAKE_WORD = os.getenv("ENABLE_WAKE_WORD", "0").lower() in ("1", "true", "yes")\n'
+            'ENABLE_SOS = os.getenv("ENABLE_SOS", "0").lower() in ("1", "true", "yes")\n'
+            'ENABLE_PI_EMOTION = os.getenv("ENABLE_PI_EMOTION", "0").lower() in ("1", "true", "yes")\n\n'
+            'EMOTION_SERVICE_URL = os.getenv("EMOTION_SERVICE_URL"',
+            1,
+        )
+        changed = True
+    if "if ENABLE_WAKE_WORD:" not in t:
+        t = t.replace(
+            '    threading.Thread(target=wake_word_listener, daemon=True).start()\n    print("✅ Wake-word listener")',
+            '    if ENABLE_WAKE_WORD:\n        threading.Thread(target=wake_word_listener, daemon=True).start()\n        print("✅ Wake-word listener")\n    else:\n        print("⏭️ Wake-word disabled")',
+            1,
+        )
+        t = t.replace(
+            '    threading.Thread(target=start_sos_listener, daemon=True).start()\n    print("✅ SOS listener',
+            '    if ENABLE_SOS:\n        threading.Thread(target=start_sos_listener, daemon=True).start()\n        print("✅ SOS listener',
+            1,
+        )
+        t = t.replace(
+            '    threading.Thread(target=pi_emotion_monitor_loop, daemon=True).start()\n    print(f"✅ Pi emotion',
+            '    if ENABLE_PI_EMOTION:\n        threading.Thread(target=pi_emotion_monitor_loop, daemon=True).start()\n        print(f"✅ Pi emotion',
+            1,
+        )
+        changed = True
+    if changed:
+        m.write_text(t, encoding="utf-8", newline="\n")
+        print("OK main.py")
+    else:
+        print("OK main.py already patched")
+
+print("")
+print("DONE. Test:")
+print("  python3 /home/carecompanion/test_conversation.py")
+print("  (say: Hello how are you today)")
+print("  python3 /home/carecompanion/main.py")
+print("  (should show: Wake-word disabled)")
+ENDFIX

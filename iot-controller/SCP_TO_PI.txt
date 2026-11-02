@@ -1,0 +1,35 @@
+# SCP these files to Raspberry Pi (run from Windows PowerShell)
+#
+# Replace PI_IP with your Pi Tailscale / LAN IP (e.g. 100.109.141.51)
+# Replace PI_USER if not carecompanion
+#
+# From repo root OR iot-controller folder:
+
+$PI = "carecompanion@100.109.141.51"
+$LOCAL = "C:\Users\izhan\OneDrive\Desktop\Care-companion2\Care-companion\iot-controller"
+$REMOTE = "/home/carecompanion/Care-companion/iot-controller"
+# If your Pi repo is at ~/iot-controller, use that instead:
+# $REMOTE = "/home/carecompanion/iot-controller"
+
+# Core mic / STT (REQUIRED for your mic fix)
+scp "$LOCAL\voice\stt\audio_io.py" "${PI}:${REMOTE}/voice/stt/audio_io.py"
+scp "$LOCAL\test_mic.py" "${PI}:${REMOTE}/test_mic.py"
+scp "$LOCAL\pi_mic_diag.py" "${PI}:${REMOTE}/pi_mic_diag.py"
+scp "$LOCAL\pi_mic_hw_check.py" "${PI}:${REMOTE}/pi_mic_hw_check.py"
+scp "$LOCAL\.env.pi.example" "${PI}:/home/carecompanion/.env.pi.example"
+scp "$LOCAL\.env.example" "${PI}:${REMOTE}/.env.example"
+
+# Optional — full mic helpers
+# scp "$LOCAL\pi_mic_speaker_loop.py" "${PI}:${REMOTE}/pi_mic_speaker_loop.py"
+# scp "$LOCAL\list_audio_devices.py" "${PI}:${REMOTE}/list_audio_devices.py"
+#
+# On Pi after transfer:
+#   nano ~/.env
+#   set: MIC_DEVICE_INDEX=1
+#   MIC_SAMPLE_RATE=44100
+#   MIC_GAIN=3.0
+#   USE_VAD=1
+#
+#   cd ~/Care-companion/iot-controller   # or your path
+#   source ~/venv/bin/activate
+#   python3 test_mic.py

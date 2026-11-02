@@ -1,0 +1,3 @@
+# emotion_service.py (:5001) — heavy ML stack; install into SHORT-PATH venv (see start_local.ps1)
+transformers
+torch

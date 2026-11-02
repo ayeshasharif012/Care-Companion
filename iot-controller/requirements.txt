@@ -1,0 +1,6 @@
+# Full stack (Pi). On Windows laptop use: .\start_local.ps1
+# (uses short-path venv + requirements-core.txt + requirements-emotion.txt)
+-r requirements-core.txt
+-r requirements-emotion.txt
+
+# Optional near-realtime (Pi): pip install faster-whisper
